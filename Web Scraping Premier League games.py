@@ -1,5 +1,3 @@
-# Getting Premier league data from 2020-2023 games
-
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
@@ -9,6 +7,7 @@ import time
 years = list(range(2023, 2022, -1))
 
 all_matches = []
+
 # URL where we are scraping data
 standings_url = "https://fbref.com/en/comps/9/Premier-Leagues-Stats"
 
@@ -17,16 +16,15 @@ for year in years:
     data = requests.get(standings_url)
     # Parse our html
     soup = BeautifulSoup(data.text)
-    # Create a seletor for the beautiful soup to select
-# Select the tabele from the page
+    # Select the table from the page
     standings_table = soup.select('table.stats_table')[0]
     # Find all a tags for all teams in the table
     links = standings_table.find_all('a')
     # Find the href of all a-tags 
     links = [l.get('href') for l in links]
-    #filter our links so that we have only squad links
+    # Filter links so that we have only squad links
     links = [l for l in links if '/squads/' in l]
-    #filter our links so that we have only squad links
+    # Create team URLs
     team_urls = [f"https://fbref.com{l}" for l in links]
     
     previous_season = soup.select("a.prev")[0].get("href")
@@ -60,9 +58,14 @@ for year in years:
         
 print("Done!!") 
 
+# Concatenate all dataframes
 match_df = pd.concat(all_matches)
+# Set display options
 pd.options.display.max_rows = 9999
+# Filter for Premier League matches
 df = match_df[match_df['Comp'] == "Premier League"]
+# Sort dataframe by date
 df.sort_values(by='Date')
 
+# Save dataframe to CSV
 match_df.to_csv("./Data/Premier_League_Data.csv")
